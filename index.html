@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="style.css" />
+    <title>Vòng quay may mắn</title>
+  </head>
+  <body>
+    <!-- Âm thanh -->
+    <audio id="sound-spin" src="sound/spin.mp3" preload="auto"></audio>
+    <audio id="sound-win" src="sound/win.mp3" preload="auto"></audio>
+
+    <!-- Giao diện chính -->
+    <div class="container">
+      <h1>Vòng quay may mắn</h1>
+      <div class="pointer"></div>
+      <canvas id="wheelCanvas" width="500" height="500"></canvas>
+      <div class="controls">
+        <input
+          type="text"
+          id="prizeInput"
+          placeholder="Nhập phần thưởng"
+          onkeydown="handleEnter(event)"
+        />
+        <button onclick="addPrize()">Thêm phần thưởng</button>
+      </div>
+      <ul id="prizeList"></ul>
+      <h2>Kết quả:</h2>
+      <ul id="resultList"></ul>
+    </div>
+
+    <!-- Popup kết quả -->
+    <div id="popupResult" class="popup">
+      <div class="popup-content">
+        <div id="popupContent"></div>
+        <div class="popup-buttons">
+          <button id="popupCloseBtn">OK</button>
+          <button id="popupRemoveBtn">Loại bỏ</button> 
+        </div>
+      </div>
+    </div>
+
+    <!-- Thư viện hiệu ứng pháo hoa -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <!-- Script chính -->
+    <script src="script.js" defer></script>
+  </body>
+</html>

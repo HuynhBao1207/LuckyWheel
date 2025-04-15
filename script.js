@@ -14,6 +14,19 @@ function handleEnter(event) {
   }
 }
 
+function addPrize() {
+  const prize = prizeInput.value.trim();
+  if (prize && prizes.length < 20 && !prizes.includes(prize)) {
+    prizes.push(prize);
+    if (!prizeColors[prize]) {
+      prizeColors[prize] = generateUniqueColor();
+    }
+    prizeInput.value = "";
+    updatePrizeList();
+    drawWheel();
+  }
+}
+
 function updatePrizeList() {
   prizeList.innerHTML = "";
   prizes.forEach((item, index) => {
@@ -70,6 +83,7 @@ function drawWheel() {
   ctx.textBaseline = "middle";
   ctx.fillText("Quay", 250, 250);
 }
+
 function spinWheel() {
   if (prizes.length === 0) return;
 
@@ -85,7 +99,7 @@ function spinWheel() {
   function easeOutCubic(t) {
     return 1 - Math.pow(1 - t, 3);
   }
-function animate(timestamp) {
+  function animate(timestamp) {
     if (!startTime) startTime = timestamp;
     const elapsed = timestamp - startTime;
     const progress = Math.min(elapsed / duration, 1);
@@ -109,6 +123,7 @@ function animate(timestamp) {
 
   requestAnimationFrame(animate);
 }
+
 function addResult(result) {
   try {
     soundWin.currentTime = 0;
@@ -122,7 +137,7 @@ function addResult(result) {
     particleCount: 150,
     spread: 80,
     origin: { y: 0.6 },
-    colors: ['#ff0', '#f0f', '#0ff', '#0f0', '#f00', '#00f'],
+    colors: ["#ff0", "#f0f", "#0ff", "#0f0", "#f00", "#00f"],
     scalar: 1.2,
   });
 
@@ -135,9 +150,9 @@ function addResult(result) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ prize: result }),
   })
-  .then((response) => response.json())
-  .then((data) => console.log("Server response:", data))
-  .catch((error) => console.error("Lỗi kết nối:", error));
+    .then((response) => response.json())
+    .then((data) => console.log("Server response:", data))
+    .catch((error) => console.error("Lỗi kết nối:", error));
 
   const popup = document.getElementById("popupResult");
   const popupContent = document.getElementById("popupContent");
@@ -161,3 +176,46 @@ function addResult(result) {
     popup.classList.remove("show");
   };
 }
+
+function generateUniqueColor() {
+  const usedColors = Object.values(prizeColors);
+  let color;
+  do {
+    const hue = Math.floor(Math.random() * 360);
+    color = `hsl(${hue}, 90%, 60%)`;
+  } while (usedColors.includes(color));
+  return color;
+}
+
+const soundSpin = document.getElementById("sound-spin");
+const soundWin = document.getElementById("sound-win");
+
+window.onload = () => {
+  prizes = [];
+  updatePrizeList();
+  drawWheel();
+
+  canvas.addEventListener("click", (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    const dx = x - 250;
+    const dy = y - 250;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+
+    if (distance <= 40) {
+      try {
+        soundSpin.currentTime = 0;
+        soundSpin.play();
+      } catch (err) {
+        console.warn("Không thể phát âm thanh (spin):", err);
+      }
+      spinWheel();
+    }
+  });
+
+  document.getElementById("popupCloseBtn").addEventListener("click", () => {
+    document.getElementById("popupResult").classList.remove("show");
+  });
+};

@@ -1,8 +1,8 @@
 <?php
-$host = 'mysql';
+$host = 'localhost';
 $dbname = 'lucky_wheel';
 $username = 'root';
-$password = 'root';
+$password = '';
 
 try {
     $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $username, $password);

@@ -1,0 +1,47 @@
+version: "3.8"
+
+services:
+  mysql:
+    image: mysql:latest
+    container_name: mysql-lucky-wheel
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: lucky_wheel
+      TZ: "Asia/Ho_Chi_Minh"
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  php:
+    build: . 
+    container_name: php-lucky-wheel
+    restart: always
+    volumes:
+      - .:/var/www/html
+    ports:
+      - "8080:80"
+    depends_on:
+      - mysql
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: phpmyadmin-lucky-wheel
+    restart: always
+    environment:
+      PMA_HOST: mysql
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "8081:80"
+
+  luckywheel-frontend:
+    image: nginx:latest
+    container_name: luckywheel-frontend
+    ports:
+      - "8082:80"
+    volumes:
+      - "./lucky-wheel-frontend:/usr/share/nginx/html:ro"
+
+volumes:
+  mysql_data:

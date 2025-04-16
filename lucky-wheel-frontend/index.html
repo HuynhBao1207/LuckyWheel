@@ -5,11 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="style.css" />
     <title>Vòng quay may mắn</title>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   </head>
   <body>
     <!-- Âm thanh -->
     <audio id="sound-spin" src="sound/spin.mp3" preload="auto"></audio>
     <audio id="sound-win" src="sound/win.mp3" preload="auto"></audio>
+
+    <button id="clearHistoryBtn" class="clear-btn">🗑 Xóa lịch sử kết quả</button>
+
+    <!-- Nút Lưu Excel -->
+    <button id="exportBtn" class="export-btn">💾 Lưu </button>
 
     <!-- Giao diện chính -->
     <div class="container">

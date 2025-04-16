@@ -25,9 +25,9 @@ const prizeInput = document.getElementById("prizeInput");
 const prizeList = document.getElementById("prizeList");
 const resultList = document.getElementById("resultList");
 
-let prizes = [];  // Mảng chứa các phần thưởng
-let prizeColors = {};  // Lưu màu sắc của từng phần thưởng
-let currentAngle = 0;  // Góc quay hiện tại của bánh xe
+let prizes = [];
+let prizeColors = {};
+let currentAngle = 0;
 
 // Xử lý sự kiện khi nhấn Enter để thêm phần thưởng
 function handleEnter(event) {
@@ -36,7 +36,6 @@ function handleEnter(event) {
   }
 }
 
-// Thêm phần thưởng vào danh sách
 function addPrize() {
   const prize = prizeInput.value.trim();
   if (prize && prizes.length < 20 && !prizes.includes(prize)) {
@@ -45,16 +44,12 @@ function addPrize() {
       prizeColors[prize] = generateUniqueColor();
     }
     prizeInput.value = "";
-
-    // Gửi danh sách phần thưởng cập nhật lên server
     socket.emit("update_prizes", prizes);
-
     updatePrizeList();
     drawWheel();
   }
 }
 
-// Cập nhật danh sách phần thưởng hiển thị trên giao diện
 function updatePrizeList() {
   prizeList.innerHTML = "";
   prizes.forEach((item, index) => {
@@ -65,20 +60,15 @@ function updatePrizeList() {
   });
 }
 
-// Xóa phần thưởng khỏi danh sách
 function removePrize(index) {
   const removedPrize = prizes[index];
   prizes.splice(index, 1);
   delete prizeColors[removedPrize];
-
-  // Gửi danh sách phần thưởng cập nhật lên server
   socket.emit("update_prizes", prizes);
-
   updatePrizeList();
   drawWheel();
 }
 
-// Vẽ bánh xe quay với danh sách phần thưởng hiện tại
 function drawWheel() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   const arcSize = (2 * Math.PI) / prizes.length;
@@ -88,7 +78,7 @@ function drawWheel() {
     ctx.beginPath();
     ctx.moveTo(250, 250);
     ctx.arc(250, 250, 250, angle, angle + arcSize);
-    ctx.fillStyle = prizeColors[prize] || "#ccc";  // Màu sắc cho phần thưởng
+    ctx.fillStyle = prizeColors[prize] || "#ccc";
     ctx.fill();
     ctx.strokeStyle = "rgba(255, 255, 255, 0.6)";
     ctx.stroke();
@@ -103,7 +93,6 @@ function drawWheel() {
     ctx.restore();
   });
 
-  // Vẽ nút quay giữa bánh xe
   ctx.beginPath();
   ctx.arc(250, 250, 40, 0, 2 * Math.PI);
   ctx.fillStyle = "#fff";
@@ -119,10 +108,8 @@ function drawWheel() {
   ctx.fillText("Quay", 250, 250);
 }
 
-// Quay bánh xe và phát kết quả
 function spinWheel() {
-  if (spinning) return;  // Kiểm tra nếu đang quay, tránh quay lại
-
+  if (spinning) return;
   if (prizes.length < 2) {
     document.getElementById("notification").textContent = "Vui lòng nhập 2 phần thưởng trở lên!";
     document.getElementById("notification").style.display = "block";
@@ -130,20 +117,15 @@ function spinWheel() {
   }
 
   document.getElementById("notification").style.display = "none";
-  spinning = true;  // Đánh dấu là đang quay
+  spinning = true;
 
-  // Chọn kết quả cục bộ
   const randomIndex = Math.floor(Math.random() * prizes.length);
   const result = prizes[randomIndex];
 
-  // Quay tại local và phát kết quả ra toàn bộ
   spinWheelWithResult(result);
-
-  // Gửi kết quả lên server để đồng bộ
   socket.emit("spin", result);
 }
 
-// Quay bánh xe với kết quả đã chọn
 function spinWheelWithResult(result) {
   const index = prizes.indexOf(result);
   if (index === -1) {
@@ -188,16 +170,15 @@ function spinWheelWithResult(result) {
     if (progress < 1) {
       requestAnimationFrame(animate);
     } else {
-      addResult(result); // Hiển thị kết quả sau khi vòng quay dừng
+      addResult(result);
     }
   }
 
   requestAnimationFrame(animate);
 }
 
-// Hiển thị kết quả quay
 function addResult(result) {
-  spinning = false;  // Đánh dấu quay xong
+  spinning = false;
 
   try {
     soundWin.currentTime = 0;
@@ -207,6 +188,19 @@ function addResult(result) {
   }
 
   const timestamp = new Date().toLocaleString("vi-VN");
+  if (!result || result === "Không có phần thưởng") {
+    result = "Không có phần thưởng";
+  }
+
+  const resultData = {
+    result: result,
+    timestamp: timestamp
+  };
+
+  let results = JSON.parse(localStorage.getItem("spinResults") || "[]");
+  results.push(resultData);
+  localStorage.setItem("spinResults", JSON.stringify(results));
+
   confetti({
     particleCount: 150,
     spread: 80,
@@ -219,17 +213,6 @@ function addResult(result) {
   li.textContent = `Kết quả: ${result} - Thời gian: ${timestamp}`;
   resultList.appendChild(li);
 
-  // Lưu kết quả lên server (nếu cần)
-  fetch("http://localhost:8080/save_result.php", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ prize: result }),
-  })
-    .then((response) => response.json())
-    .then((data) => console.log("Server response:", data))
-    .catch((error) => console.error("Lỗi kết nối:", error));
-
-  // Hiển thị popup với kết quả
   const popup = document.getElementById("popupResult");
   const popupContent = document.getElementById("popupContent");
   const btnOk = document.getElementById("popupCloseBtn");
@@ -253,7 +236,6 @@ function addResult(result) {
   };
 }
 
-// Hàm tạo màu sắc ngẫu nhiên cho phần thưởng
 function generateUniqueColor() {
   const usedColors = Object.values(prizeColors);
   let color;
@@ -264,29 +246,78 @@ function generateUniqueColor() {
   return color;
 }
 
-// Khởi tạo âm thanh
 const soundSpin = document.getElementById("sound-spin");
 const soundWin = document.getElementById("sound-win");
 
-// Đặt sự kiện cho canvas
 window.onload = () => {
   prizes = [];
   updatePrizeList();
   drawWheel();
 
-  canvas.addEventListener("click", (e) => {
-    const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+  const savedResults = JSON.parse(localStorage.getItem("spinResults") || "[]");
+  savedResults.forEach(({ result, timestamp }) => {
+    const li = document.createElement("li");
+    li.textContent = `Kết quả: ${result} - Thời gian: ${timestamp}`;
+    resultList.appendChild(li);
+  });
 
-    const dx = x - 250;
-    const dy = y - 250;
-    const distance = Math.sqrt(dx * dx + dy * dy);
+  document.getElementById("clearHistoryBtn").addEventListener("click", () => {
+    const storedResults = JSON.parse(localStorage.getItem("spinResults") || "[]");
 
-    if (distance <= 40) {
-      spinWheel();
+    if (storedResults.length === 0) {
+      alert("Không có lịch sử để xóa!");
+      return;
+    }
+    if (confirm("Bạn có chắc muốn xóa toàn bộ lịch sử kết quả?")) {
+      localStorage.removeItem("spinResults");
+      resultList.innerHTML = "";
     }
   });
+
+  document.getElementById("exportBtn").addEventListener("click", () => {
+    const storedResults = JSON.parse(localStorage.getItem("spinResults") || "[]");
+    if (storedResults.length === 0) {
+      alert("Không có dữ liệu để xuất!");
+      return;
+    }
+
+    const data = storedResults.map((item, index) => ({
+      STT: index + 1,
+      "Phần thưởng": item.result || "Không có phần thưởng",
+      "Thời gian": item.timestamp || "Không có thời gian"
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(data);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Kết Quả");
+
+    const now = new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-");
+    const filename = `ket-qua-vong-quay-${now}.xlsx`;
+    XLSX.writeFile(workbook, filename);
+
+    // 🎉 Hiển thị alert sau khi lưu
+    alert(`✅ Đã lưu kết quả ra file: ${filename}`);
+
+  });
+
+  canvas.addEventListener("click", (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;  // Xác định điểm nhấp chuột theo tọa độ canvas
+    const y = e.clientY - rect.top;
+  
+    const centerX = canvas.width / 2;  // Tính toán tọa độ trung tâm
+    const centerY = canvas.height / 2;
+    const radius = 40;  // Bán kính của nút quay (giữ nguyên)
+  
+    const dx = x - centerX;
+    const dy = y - centerY;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+  
+    if (distance <= radius) {  // Kiểm tra xem có click vào vùng nút quay không
+      spinWheel();  // Nếu có thì gọi hàm quay
+    }
+  });
+  
 
   document.getElementById("popupCloseBtn").addEventListener("click", () => {
     document.getElementById("popupResult").classList.remove("show");

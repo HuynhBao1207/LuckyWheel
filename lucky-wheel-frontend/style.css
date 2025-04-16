@@ -50,6 +50,11 @@ body {
   outline: none;
 }
 
+
+.controls .delete-btn {
+  margin-left: 10px;
+}
+
 ul {
   list-style: none;
   padding: 0;
@@ -316,4 +321,6 @@ li span {
 .export-btn:hover {
   background-color: #388e3c;
 }
+
+
 

@@ -47,6 +47,7 @@ function addPrize() {
     socket.emit("update_prizes", prizes);
     updatePrizeList();
     drawWheel();
+    savePrizesToLocalStorage();
   }
 }
 
@@ -62,12 +63,26 @@ function updatePrizeList() {
 
 function removePrize(index) {
   const removedPrize = prizes[index];
-  prizes.splice(index, 1);
-  delete prizeColors[removedPrize];
-  socket.emit("update_prizes", prizes);
+  if (confirm(`Bạn có chắc muốn xóa phần thưởng "${removedPrize}" không?`)) {
+    prizes.splice(index, 1);
+    delete prizeColors[removedPrize];
+    socket.emit("update_prizes", prizes);
+    updatePrizeList();
+    drawWheel();
+    savePrizesToLocalStorage(); // lưu lại danh sách mới
+  }
+}
+function savePrizesToLocalStorage() {
+  localStorage.setItem("wheelPrizes", JSON.stringify(prizes));
+}
+
+function loadPrizesFromLocalStorage() {
+  const saved = JSON.parse(localStorage.getItem("wheelPrizes") || "[]");
+  prizes = saved;
   updatePrizeList();
   drawWheel();
 }
+
 
 function drawWheel() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -111,12 +126,10 @@ function drawWheel() {
 function spinWheel() {
   if (spinning) return;
   if (prizes.length < 2) {
-    document.getElementById("notification").textContent = "Vui lòng nhập 2 phần thưởng trở lên!";
-    document.getElementById("notification").style.display = "block";
+    alert("Vui lòng thêm ít nhất 2 phần thưởng để quay!");
     return;
   }
 
-  document.getElementById("notification").style.display = "none";
   spinning = true;
 
   const randomIndex = Math.floor(Math.random() * prizes.length);
@@ -250,7 +263,7 @@ const soundSpin = document.getElementById("sound-spin");
 const soundWin = document.getElementById("sound-win");
 
 window.onload = () => {
-  prizes = [];
+  loadPrizesFromLocalStorage();
   updatePrizeList();
   drawWheel();
 

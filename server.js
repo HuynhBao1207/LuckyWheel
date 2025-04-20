@@ -1,47 +1,76 @@
-// server.js
 const express = require("express");
 const http = require("http");
 const socketIo = require("socket.io");
+const path = require("path");
 
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server);
 
-// Phục vụ file tĩnh từ thư mục lucky-wheel-frontend
-app.use(express.static("lucky-wheel-frontend"));
+// Route giao diện chọn chế độ
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "GAMEMODE.html"));
+});
 
-let prizes = []; // Danh sách phần thưởng được lưu trên server
+// Phục vụ frontend cho từng chế độ
+app.use("/multi", express.static(path.join(__dirname, "lucky-wheel-frontend")));
+app.use("/single", express.static(path.join(__dirname, "single-player")));
 
-// Sự kiện khi một client kết nối tới server
-io.on("connection", (socket) => {
-  console.log("✅ Một người chơi đã kết nối");
+// Danh sách phần thưởng dùng chung (nếu muốn tách riêng, có thể khai báo riêng cho mỗi chế độ)
+let prizes = [];
 
-  // Gửi danh sách phần thưởng hiện tại về client khi nó kết nối
+// 🔁 MULTI-PLAYER LOGIC
+const multiNamespace = io.of("/multi");
+multiNamespace.on("connection", (socket) => {
+  console.log("✅ Một người chơi (multi) đã kết nối");
+
   socket.emit("update_prizes", prizes);
 
-  // Nhận kết quả quay từ 1 client và gửi lại cho tất cả các client
   socket.on("spin", (result) => {
-    console.log("🎯 Kết quả quay:", result);
-    socket.broadcast.emit("spin_result", result); // Chỉ phát kết quả cho các client còn lại
+    console.log("🎯 [Multi] Kết quả quay:", result);
+    socket.broadcast.emit("spin_result", result); // Gửi cho người chơi khác
   });
-  
 
-  // Khi client gửi danh sách phần thưởng mới
   socket.on("update_prizes", (updatedPrizes) => {
-    prizes = updatedPrizes; // Cập nhật danh sách trên server
-    console.log("📦 Danh sách phần thưởng cập nhật:", prizes);
-
-    // Gửi lại danh sách cho tất cả client
-    io.emit("update_prizes", prizes);
+    prizes = updatedPrizes;
+    console.log("📦 [Multi] Danh sách phần thưởng cập nhật:", prizes);
+    multiNamespace.emit("update_prizes", prizes);
   });
 
-  // Log khi client ngắt kết nối
   socket.on("disconnect", () => {
-    console.log("❌ Một người chơi đã rời đi");
+    console.log("❌ Một người chơi (multi) đã rời đi");
+  });
+});
+
+// 🎯 SINGLE-PLAYER LOGIC
+const singleNamespace = io.of("/single");
+singleNamespace.on("connection", (socket) => {
+  console.log(`✅ Người chơi (single) ${socket.id} đã kết nối`);
+
+  socket.emit("update_prizes", prizes);
+
+  socket.on("spin", (result) => {
+    console.log(`🎯 [Single] Kết quả quay của ${socket.id}:`, result);
+    socket.emit("spin_result", result); // Gửi riêng cho người chơi đó
+  });
+
+  socket.on("update_prizes", (updatedPrizes) => {
+    prizes = updatedPrizes;
+    console.log("📦 [Single] Danh sách phần thưởng cập nhật:", prizes);
+    socket.emit("update_prizes", prizes);
+  });
+
+  socket.on("disconnect", () => {
+    console.log(`❌ Người chơi (single) ${socket.id} đã rời đi`);
   });
 });
 
 // Khởi động server
 server.listen(3000, () => {
   console.log("🚀 Server đang chạy tại: http://localhost:3000");
+});
+
+// Nếu người dùng truy cập sai route
+app.use((req, res, next) => {
+  res.status(404).send("⛔ Trang không tồn tại hoặc sai đường dẫn!");
 });

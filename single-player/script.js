@@ -1,5 +1,5 @@
-// Kết nối tới server qua Socket.IO
-const socket = io("/multi");
+// Kết nối tới server qua Socket.IO (giữ kết nối, nhưng không dùng các sự kiện socket phát tán)
+const socket = io("/single");
 
 const params = new URLSearchParams(window.location.search);
 const mode = params.get("mode");
@@ -11,21 +11,7 @@ if (!mode) {
 // Biến trạng thái để tránh quay nhiều lần
 let spinning = false;
 
-// Nhận kết quả quay từ server
-socket.on("spin_result", (result) => {
-  console.log("Received spin result:", result); // Thêm log để kiểm tra
-  if (!spinning) {
-    spinWheelWithResult(result); // Quay vòng với kết quả nhận được từ server
-  }
-});
-
-// Nhận danh sách phần thưởng mới từ server
-socket.on("update_prizes", (updatedPrizes) => {
-  prizes = updatedPrizes;
-  updatePrizeList();
-  drawWheel();
-});
-
+// Nhận danh sách phần thưởng từ localStorage và cập nhật giao diện
 const canvas = document.getElementById("wheelCanvas");
 const ctx = canvas.getContext("2d");
 const prizeInput = document.getElementById("prizeInput");
@@ -36,27 +22,24 @@ let prizes = [];
 let prizeColors = {};
 let currentAngle = 0;
 
-// Xử lý sự kiện khi nhấn Enter để thêm phần thưởng
-function handleEnter(event) {
-  if (event.key === "Enter") {
-    addPrize();
-  }
-}
-
 function addPrize() {
   const prize = prizeInput.value.trim();
+  console.log("Đang thêm phần thưởng:", prize);  // Thêm dòng log này để kiểm tra giá trị nhập
   if (prize && prizes.length < 20 && !prizes.includes(prize)) {
     prizes.push(prize);
+    console.log("Danh sách phần thưởng sau khi thêm:", prizes);  // Kiểm tra danh sách phần thưởng
     if (!prizeColors[prize]) {
       prizeColors[prize] = generateUniqueColor();
     }
     prizeInput.value = "";
-    socket.emit("update_prizes", prizes);
     updatePrizeList();
     drawWheel();
     savePrizesToLocalStorage();
+  } else {
+    console.log("Không thể thêm phần thưởng:", prize);  // Kiểm tra lý do không thể thêm phần thưởng
   }
 }
+
 
 function updatePrizeList() {
   prizeList.innerHTML = "";
@@ -73,12 +56,12 @@ function removePrize(index) {
   if (confirm(`Bạn có chắc muốn xóa phần thưởng "${removedPrize}" không?`)) {
     prizes.splice(index, 1);
     delete prizeColors[removedPrize];
-    socket.emit("update_prizes", prizes);
     updatePrizeList();
     drawWheel();
-    savePrizesToLocalStorage(); // lưu lại danh sách mới
+    savePrizesToLocalStorage();
   }
 }
+
 function savePrizesToLocalStorage() {
   localStorage.setItem("wheelPrizes", JSON.stringify(prizes));
 }
@@ -89,7 +72,6 @@ function loadPrizesFromLocalStorage() {
   updatePrizeList();
   drawWheel();
 }
-
 
 function drawWheel() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -143,7 +125,6 @@ function spinWheel() {
   const result = prizes[randomIndex];
 
   spinWheelWithResult(result);
-  socket.emit("spin", result);
 }
 
 function spinWheelWithResult(result) {
@@ -236,23 +217,11 @@ function addResult(result) {
   const popup = document.getElementById("popupResult");
   const popupContent = document.getElementById("popupContent");
   const btnOk = document.getElementById("popupCloseBtn");
-  const btnRemove = document.getElementById("popupRemoveBtn");
 
   popupContent.textContent = `🎉 Bạn đã trúng: ${result}! 🎉`;
   popup.classList.add("show");
 
   btnOk.onclick = () => {
-    popup.classList.remove("show");
-  };
-
-  btnRemove.onclick = () => {
-    const index = prizes.indexOf(result);
-    if (index !== -1) {
-      prizes.splice(index, 1);
-      updatePrizeList();
-      drawWheel();
-      socket.emit("update_prizes", prizes);
-    }
     popup.classList.remove("show");
   };
 }
@@ -342,25 +311,19 @@ window.onload = () => {
     const x = e.offsetX;
     const y = e.offsetY;
 
-  
     const centerX = canvas.width / 2;  // Tính toán tọa độ trung tâm
     const centerY = canvas.height / 2;
     const radius = 40;  // Bán kính của nút quay (giữ nguyên)
-  
+
     const dx = x - centerX;
     const dy = y - centerY;
     const distance = Math.sqrt(dx * dx + dy * dy);
 
     console.log("Click tại:", x, y, "Khoảng cách đến tâm:", distance);
-  
+
     if (distance <= radius) {  // Kiểm tra xem có click vào vùng nút quay không
       spinWheel();  // Nếu có thì gọi hàm quay
     }
-  });
-  
-
-  document.getElementById("popupCloseBtn").addEventListener("click", () => {
-    document.getElementById("popupResult").classList.remove("show");
   });
   document.getElementById("backToHomeBtn").addEventListener("click", () => {
     // Hiển thị thông báo xác nhận
@@ -370,3 +333,9 @@ window.onload = () => {
     }
   });  
 };
+// Xử lý sự kiện khi nhấn Enter để thêm phần thưởng
+function handleEnter(event) {
+  if (event.key === "Enter") {
+    addPrize();
+  }
+}

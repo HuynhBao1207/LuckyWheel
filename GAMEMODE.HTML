@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Chọn chế độ chơi - Vòng quay may mắn</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background: linear-gradient(135deg, #f6d365, #fda085);
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: #333;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      margin-bottom: 40px;
+      text-shadow: 1px 1px 2px #fff;
+    }
+
+    .mode-buttons {
+      display: flex;
+      gap: 30px;
+    }
+
+    button {
+      padding: 15px 30px;
+      font-size: 1.2rem;
+      border: none;
+      border-radius: 12px;
+      background: #ffffffcc;
+      color: #333;
+      cursor: pointer;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+      transition: all 0.3s ease;
+    }
+
+    button:hover {
+      background: #fff;
+      transform: translateY(-3px);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+    }
+  </style>
+</head>
+<body>
+  <h1>🎯 Chọn chế độ chơi</h1>
+  <div class="mode-buttons">
+    <button id="single-player">Chơi 1 người</button>
+    <button id="multi-player">Chơi nhiều người</button>
+  </div>
+
+  <script>
+    document.getElementById('single-player').addEventListener('click', function () {
+      window.location.href = "/single/index.html?mode=single";
+    });
+
+    document.getElementById('multi-player').addEventListener('click', function () {
+      window.location.href = "/multi/index.html?mode=multi";
+    });
+  </script>
+</body>
+</html>

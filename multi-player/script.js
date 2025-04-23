@@ -49,7 +49,7 @@ function addPrize() {
     prizes.push(prize);
     if (!prizeColors[prize]) {
       prizeColors[prize] = generateUniqueColor();
-    }
+    } 
     prizeInput.value = "";
     socket.emit("update_prizes", prizes);
     updatePrizeList();

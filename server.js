@@ -13,7 +13,7 @@ app.get("/", (req, res) => {
 });
 
 // Phục vụ frontend cho từng chế độ
-app.use("/multi", express.static(path.join(__dirname, "lucky-wheel-frontend")));
+app.use("/multi", express.static(path.join(__dirname, "multi-player")));
 app.use("/single", express.static(path.join(__dirname, "single-player")));
 
 // Danh sách phần thưởng dùng chung (nếu muốn tách riêng, có thể khai báo riêng cho mỗi chế độ)

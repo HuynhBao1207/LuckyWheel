@@ -45,8 +45,18 @@ function updatePrizeList() {
   prizeList.innerHTML = "";
   prizes.forEach((item, index) => {
     const li = document.createElement("li");
-    li.innerHTML = `${item} 
-      <button class="delete-btn" onclick="removePrize(${index})">Xóa</button>`;
+    li.innerHTML = item; 
+
+    const deleteBtn = document.createElement("button");
+    deleteBtn.textContent = "Xóa";
+    deleteBtn.classList.add("delete-btn");
+
+    deleteBtn.addEventListener("click", () => {
+      removePrize(index);
+    });
+
+    li.appendChild(deleteBtn);
+
     prizeList.appendChild(li);
   });
 }
